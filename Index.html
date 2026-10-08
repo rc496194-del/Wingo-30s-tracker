@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101522">
+<title>WinGo 30S Tracker</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:20px;background:#101522;color:#f4f6ff;font-family:system-ui,sans-serif}
+main{max-width:500px;margin:auto}
+h1{font-size:27px}
+p{color:#b4bfd3}
+.card{background:#1b2435;border:1px solid #303b50;border-radius:16px;padding:16px;margin:14px 0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.big{font-size:27px;font-weight:700}
+input,button{width:100%;padding:13px;margin-top:10px;border-radius:10px;font-size:16px}
+input{background:#101522;color:white;border:1px solid #46516a}
+button{background:#a7b8ff;color:#101522;border:0;font-weight:700}
+li{padding:9px 0;border-bottom:1px solid #303b50}
+.small{font-size:13px}
+</style>
+</head>
+<body>
+<main>
+<h1>🎯 WinGo 30S</h1>
+<p>History & Accuracy Tracker</p>
+
+<div class="card">
+<strong>লাইভ সংযোগ</strong>
+<p id="status">API এখনো সংযুক্ত হয়নি</p>
+<p class="small">এটি এখন ম্যানুয়াল History অ্যাপ।</p>
+</div>
+
+<div class="grid">
+<div class="card">
+<p>মোট রেকর্ড</p>
+<div class="big" id="total">0</div>
+</div>
+<div class="card">
+<p>BIG / SMALL</p>
+<div class="big" id="split">0 / 0</div>
+</div>
+</div>
+
+<div class="card">
+<h3>প্রকৃত ফলাফল যোগ করো</h3>
+<p class="small">গেমে দেখা নম্বর ০ থেকে ৯ লিখো।</p>
+<input id="num" type="number" min="0" max="9" inputmode="numeric" placeholder="নম্বর 0–9">
+<button id="add">ফলাফল সংরক্ষণ</button>
+</div>
+
+<div class="card">
+<h3>Round History</h3>
+<ol id="history"></ol>
+<button id="clear">History মুছো</button>
+</div>
+
+<div class="card">
+<h3>Accuracy Tracker</h3>
+<p id="accuracy">পূর্বাভাসের রেকর্ড এখনো নেই।</p>
+<p class="small">যাচাইকৃত পূর্বাভাস ও ফলাফল ছাড়া Accuracy গণনা করা হবে না।</p>
+</div>
+</main>
+
+<script>
+const KEY="wingo30-history-v1";
+let rows=[];
+try{rows=JSON.parse(localStorage.getItem(KEY)||"[]");if(!Array.isArray(rows))rows=[]}
+catch{rows=[]}
+const $=id=>document.getElementById(id);
+
+function render(){
+ $("total").textContent=rows.length;
+ const big=rows.filter(r=>r.n>=5).length;
+ $("split").textContent=big+" / "+(rows.length-big);
+ const list=$("history");
+ list.replaceChildren();
+ if(!rows.length){
+  const li=document.createElement("li");
+  li.textContent="এখনো কোনও ফলাফল নেই";
+  list.append(li);
+ }
+ rows.slice().reverse().forEach((r,i)=>{
+  const li=document.createElement("li");
+  li.textContent="#"+(rows.length-i)+" · "+r.n+" · "+(r.n>=5?"BIG":"SMALL")+" · "+r.time;
+  list.append(li);
+ });
+}
+$("add").onclick=()=>{
+ const value=$("num").value.trim();
+ if(!/^[0-9]$/.test(value)){
+  alert("০ থেকে ৯-এর মধ্যে নম্বর দাও");
+  return;
+ }
+ rows.push({n:Number(value),time:new Date().toLocaleString()});
+ try{localStorage.setItem(KEY,JSON.stringify(rows))}
+ catch{
+  rows.pop();
+  alert("ফোনে ডেটা সংরক্ষণ করা যায়নি");
+  return;
+ }
+ $("num").value="";
+ render();
+};
+$("clear").onclick=()=>{
+ if(!confirm("সব History মুছে ফেলবে?"))return;
+ rows=[];
+ try{localStorage.removeItem(KEY)}catch{}
+ render();
+};
+render();
+</script>
+</body>
+</html>
